@@ -128,8 +128,6 @@ casModule.CasModule = function(options, callback) {
   if (options.server) {
     self._app.all('/cas/login', function(req, res) {
       var service = req.query.service || req.body.service;
-      console.log(options.server.services);
-      console.log(service);
       // Service name is a prefix match
       if (!_.find(options.server.services, function(s) {
         return service.substr(0, s.length) === s;
