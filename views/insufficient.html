@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block title %}
+{{ siteTitle }}: {% block subTitle %}Insufficient Privileges{% endblock %}
+{% endblock %}
+
+{% block bodyClass %}insufficient-privileges-page{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block breadcrumbs %}
+{% endblock %}
+
+{% block main %}
+  <h2>Insufficient Privileges</h2>
+
+  <p>Although you have an account, you do not have login privileges on this particular site.</p>
+{% endblock %}

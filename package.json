@@ -1,0 +1,32 @@
+{
+  "name": "apostrophe-cas",
+  "version": "0.5.0",
+  "description": "CAS authentication client and server for the Apostrophe CMS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/punkave/apostrophe-cas"
+  },
+  "keywords": [
+    "cas",
+    "authentication",
+    "apostrophe",
+    "cms"
+  ],
+  "author": "P'unk Avenue LLC",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/punkave/apostrophe-cas/issues"
+  },
+  "homepage": "https://github.com/punkave/apostrophe-cas",
+  "dependencies": {
+    "connect-cas": "^1.4.1",
+    "qs": "^0.6.6",
+    "async": "^0.9.0",
+    "url": "^0.10.1",
+    "lodash": "^2.4.1"
+  }
+}
