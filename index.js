@@ -38,6 +38,7 @@ casModule.CasModule = function(options, callback) {
       var user;
       return self.unserialize(req, function(err, user) {
         if (err) {
+          console.error(err);
           req.session.destroy();
           return res.send(self.renderPage(req, 'insufficient', {}, 'anon'));
         }
@@ -48,15 +49,21 @@ casModule.CasModule = function(options, callback) {
       });
     });
 
+    // Access to other modules
+    self.setBridge = function(bridge) {
+      self._bridge = bridge;
+    };
+
     self.unserialize = function(req, callback) {
       var user;
       if ((!req.session.cas) || (!req.session.cas.user)) {
         return callback(null);
       }
       return async.series({
-        fetchUser: function(callback) {
+        fetchUser: function(outerCallback) {
           var users = self._apos.authHardcodedUsers(options.site.options);
-
+          var people = self._bridge['apostrophe-people'];
+          var group;
           // TODO: duplicating this here is ugly
           var _user = _.find(users, function(user) {
             return (user.username === req.session.cas.user) || (user.email === req.session.cas.user);
@@ -65,19 +72,58 @@ casModule.CasModule = function(options, callback) {
             // For the convenience of mongodb (it's unique)
             _user._id = _user.username;
             user = _user;
-            return callback(null);
+            return outerCallback(null);
           }
-
-          return self._apos.pages.findOne({ type: 'person', username: req.session.cas.user }, function(err, person) {
-            if (err) {
-              return callback(err);
+          return async.series({
+            exists: function(callback) {
+              return self._apos.pages.findOne({ type: 'person', username: req.session.cas.user }, function(err, person) {
+                if (err) {
+                  return callback(err);
+                }
+                if (person) {
+                  user = person;
+                  return outerCallback(null);
+                } else if (!options.client.createPerson) {
+                  return callback(new Error('Not a local user'));
+                }
+                return callback(null);
+              });
+            },
+            ensureGroup: function(callback) {
+              if (!options.client.createPerson.group) {
+                return callback(null);
+              }
+              var groups = self._bridge['apostrophe-groups'];
+              return groups.ensureExists(req, options.client.createPerson.group.name, options.client.createPerson.group.permissions, function(err, _group) {
+                group = _group;
+                return callback(err);
+              });
+            },
+            supply: function(callback) {
+              // Supply a person
+              user = people.newInstance();
+              _.extend(user,
+                {
+                  username: req.session.cas.user,
+                  // Terrible default first and last names in case
+                  // nothing better can be determined
+                  firstName: req.session.cas.user.substr(0, 1),
+                  lastName: req.session.cas.user.substr(1),
+                  groupIds: group ? [ group._id ] : [],
+                  login: true
+                }
+              );
+              return self.beforeCreatePerson(req, cas, user, callback);
+            },
+            save: function(callback) {
+              // Save the new person to the database after the
+              // createPerson callback, if any
+              people.putOne(req, user, callback);
+            },
+            after: function(callback) {
+              return self.afterCreatePerson(req, cas, user, callback);
             }
-            if (!person) {
-              return callback(new Error('Person no longer exists'));
-            }
-            user = person;
-            return callback(null);
-          });
+          }, outerCallback);
         },
         afterUnserialize: function(callback) {
           return self._apos.authAfterUnserialize(user, callback);
@@ -90,18 +136,25 @@ casModule.CasModule = function(options, callback) {
       });
     };
 
+    self.beforeCreatePerson = function(req, cas, person, callback) {
+      if (options.client.createPerson.before) {
+        return options.client.createPerson.before(req, cas, user, callback);
+      }
+      return callback(null);
+    };
+
+    self.afterCreatePerson = function(req, cas, person, callback) {
+      if (options.client.createPerson.after) {
+        return options.client.createPerson.after(req, cas, user, callback);
+      }
+      return callback(null);
+    };
+
     self._app.get('/logout', function(req, res) {
       if (!req.session) {
         return res.redirect('/');
       }
-      self.logout();
-      // Forget our own login session
-      if (req.session.destroy) {
-        req.session.destroy();
-      } else {
-        // Cookie-based sessions have no destroy()
-        req.session = null;
-      }
+      req.session.destroy();
       // Send the user to the official campus-wide logout URL
       var options = cas.configure();
       options.pathname = options.paths.logout;
@@ -151,12 +204,12 @@ casModule.CasModule = function(options, callback) {
         return res.redirect('/login');
       }
     });
-    self._app.get('/cas/logout', function() {
+    self._app.get('/cas/logout', function(req, res) {
       return res.redirect('/logout');
     });
     // This method is pretty dumb because you can't learn
     // the username this way. Clients should use serviceValidate.
-    self._app.all('/cas/validate', function() {
+    self._app.all('/cas/validate', function(req, res) {
       var ticket = req.query.ticket || req.body.ticket;
       return self._ticketCache.get(ticket, function(err, value) {
         if (err) {
