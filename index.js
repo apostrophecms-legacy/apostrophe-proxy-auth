@@ -82,6 +82,9 @@ casModule.CasModule = function(options, callback) {
                 }
                 if (person) {
                   user = person;
+                  // Flag indicating it's not a hardcoded user
+                  // (we should think about just killing hardcoded users)
+                  user._mongodb = true;
                   return outerCallback(null);
                 } else if (!options.client.createPerson) {
                   return callback(new Error('Not a local user'));
@@ -102,6 +105,9 @@ casModule.CasModule = function(options, callback) {
             supply: function(callback) {
               // Supply a person
               user = people.newInstance();
+              // Flag indicating it's not a hardcoded user
+              // (we should think about just killing hardcoded users)
+              user._mongodb = true;
               _.extend(user,
                 {
                   username: req.session.cas.user,
