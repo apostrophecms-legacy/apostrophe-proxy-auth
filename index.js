@@ -25,10 +25,9 @@ casModule.CasModule = function(options, callback) {
   // Mix in the ability to serve assets and templates
   self._apos.mixinModuleAssets(self, 'cas', __dirname, options);
 
-  // Your CAS server's hostname must be the "host" property of this object
-  cas.configure(options.client);
-
   if (options.client) {
+    // Your CAS server's hostname must be the "host" property of this object
+    cas.configure(options.client);
     // This route has the serviceValidate middleware, which verifies
     // that CAS authentication has taken place, and also the
     // authenticate middleware, which requests it if it has not already
@@ -195,16 +194,7 @@ casModule.CasModule = function(options, callback) {
         return res.send('invalid service');
       }
       if (req.user) {
-        var ticket = self._apos.generateId();
-        req.session.casTickets = req.session.casTickets || {};
-        req.session.casTickets[service] = ticket;
-        return self._ticketCache.set(ticket, req.user.username, function(err) {
-          if (err) {
-            res.statusCode = 500;
-            return res.send('error');
-          }
-          return res.redirect(service + '?' + qs.stringify({ ticket: ticket }));
-        });
+        return self.redirectWithTicket(req, res);
       } else {
         req.session.casLoginForService = service;
         return res.redirect('/login');
@@ -269,14 +259,24 @@ casModule.CasModule = function(options, callback) {
         return next();
       }
       if (req.user) {
-        var service = req.session.casLoginForService;
-        var ticket = req.session.casTicket;
-        delete req.session.casLoginForService;
-        delete req.session.casTicket;
-        return res.redirect(service + '?' + qs.stringify({ ticket: ticket }));
+        return self.redirectWithTicket(req, res);
       }
       return next();
     });
+
+    self.redirectWithTicket = function(req, res) {
+      var service = req.session.casLoginForService;
+      delete req.session.casLoginForService;
+
+      var ticket = self._apos.generateId();
+      return self._ticketCache.set(ticket, req.user.username, function(err) {
+        if (err) {
+          res.statusCode = 500;
+          return res.send('error');
+        }
+        return res.redirect(service + '?' + qs.stringify({ ticket: ticket }));
+      });
+    };
   }
 
   if (callback) {
