@@ -1,6 +1,6 @@
 {
   "name": "apostrophe-cas",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "CAS authentication client and server for the Apostrophe CMS",
   "main": "index.js",
   "scripts": {
