@@ -63,6 +63,7 @@ casModule.CasModule = function(options, callback) {
           var users = self._apos.authHardcodedUsers(options.site.options);
           var people = self._bridge['apostrophe-people'];
           var group;
+          // Support hardcoded users
           // TODO: duplicating this here is ugly
           var _user = _.find(users, function(user) {
             return (user.username === req.session.cas.user) || (user.email === req.session.cas.user);
@@ -73,6 +74,7 @@ casModule.CasModule = function(options, callback) {
             user = _user;
             return outerCallback(null);
           }
+          // Support regular database users
           return async.series({
             exists: function(callback) {
               return self._apos.pages.findOne({ type: 'person', username: req.session.cas.user }, function(err, person) {
@@ -132,6 +134,12 @@ casModule.CasModule = function(options, callback) {
         },
         afterUnserialize: function(callback) {
           return self._apos.authAfterUnserialize(user, callback);
+        },
+        adminOverride: function(callback) {
+          if (options.client.admin && (user.username === options.client.admin)) {
+            user.permissions.admin = true;
+          }
+          return callback(null);
         }
       }, function(err) {
         if (err) {

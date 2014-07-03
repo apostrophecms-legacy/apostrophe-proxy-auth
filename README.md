@@ -66,6 +66,21 @@ By default, users created on the fly are not added to any group. You can change 
     }
 ```
 
+### Forcing an Admin User
+
+You can use the `admin` option to set a username that always receives full admin permissions upon logging in. This is convenient for bootstrapping a new site that uses CAS login. First use the `admin` option to give your own CAS account full privileges, then log in and add groups and permissions for other CAS users.
+
+```javascript
+    apostrophe-cas: {
+      client: {
+        protocol: 'https',
+        host: 'cas.myschool.edu',
+        createPerson: true,
+        admin: 'jillrocks'
+      }
+    }
+```
+
 ### Setting First Names, Last Names and Other Metadata
 
 Since CAS servers frequently don't provide any more information than a username, the default behavior is to set the user's first and last name based on their username, which isn't very satisfying.
@@ -152,5 +167,5 @@ The CAS server does not check that incoming requests to the `/cas/*` routes are 
 ## Current Limitations
 
 * The CAS client only obtains the username from the CAS server. No other fields are retrieved automatically. However, you can set callbacks to do more with the CAS data.
-* The CAS server support is very basic only provides the username to the other site. It was built as a convenient way to test the client support.
-* There is no CAS proxy support. (Does anybody use that?)
+* The CAS server support is very basic and currently only provides the username to the other site. It was built as a convenient way to test the client support.
+* There is no CAS proxy support. (Does anybody use that? What for?)
