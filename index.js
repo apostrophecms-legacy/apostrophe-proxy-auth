@@ -16,6 +16,8 @@ proxyAuthModule.ProxyAuthModule = function(options, callback) {
   self._action = '/apos-proxy-auth';
   self._options = options;
 
+  self.middleware = [];
+
   // Mix in the ability to serve assets and templates
   self._apos.mixinModuleAssets(self, 'proxy-auth', __dirname, options);
 
