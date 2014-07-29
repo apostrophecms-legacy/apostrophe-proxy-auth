@@ -6,6 +6,8 @@ This documentation also covers how to configure Apache for use with this module 
 
 This module does *not* implement weblogin, cosign, basic auth or Shibboleth directly. Instead it relies on Apache to do that, and accepts Apache's word for it when a username is presented via an HTTP header. We'll demonstrate how to ensure that this information is authentic.
 
+This module is not for CAS (Centralized Authentication Service). Use [apostrophe-cas](https://github.com/punkave/apostrophe-cas) instead.
+
 ## Installation
 
 npm install --save apostrophe-proxy-auth
