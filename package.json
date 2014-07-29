@@ -1,6 +1,6 @@
 {
   "name": "apostrophe-proxy-auth",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Log into Apostrophe via weblogin, cosign, shibboleth, basic auth, etc. with an Apache reverse proxy server",
   "main": "index.js",
   "scripts": {
