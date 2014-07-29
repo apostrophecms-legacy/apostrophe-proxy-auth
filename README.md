@@ -271,8 +271,6 @@ There is also an `after` option, which takes the same arguments and is invoked a
 
 If you prefer you can subclass the `apostrophe-proxy-auth` module and override the `beforeCreatePerson` and `afterCreatePerson` methods in your `index.js` file. You'll need to follow the same pattern used when subclassing `apostrophe-snippets`. If this is all new to you, just use the options.
 
-The CAS server does not check that incoming requests to the `/cas/*` routes are secured with https. Since Apostrophe is usually behind a reverse proxy like nginx, this isn't possible anyway. It is your responsibility to ensure that any non-https requests to `/cas/*` URLs are rejected by your proxy server in production.
-
 ## Logging Out
 
 Logging out works out of the box. If you also want the user logged out of a larger campus "single sign on" environment, provide the `afterLogout` option. The user is redirected to this URL after logout. Ask your customer's cosign administrator what URL to use.
