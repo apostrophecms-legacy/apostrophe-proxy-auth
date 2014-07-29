@@ -143,7 +143,7 @@ Next, create `/etc/sites-enabled/mysite` and configure it to protect the `/login
 # Non-secured site: just redirect to the secured site
 <VirtualHost *:80>
         ServerName mysite.myschool.edu
-        <LocationMatch />
+        <Location />
           RedirectMatch ^/(.*)$ https://mysite.myschool.edu/$1
         </Location>
         ErrorLog /var/log/apache2/mysite.error.log
@@ -180,7 +180,7 @@ Next, create `/etc/sites-enabled/mysite` and configure it to protect the `/login
     # Copy the REMOTE_USER environment variable to a custom HTTP header and pass
     # that on to the node server
     RewriteCond %{REMOTE_USER} (.*)
-    RewriteRule .* - [E=X_REMOTE_USER:%1]
+    RewriteRule .* - [E=x-remote-user:%1]
     # Pass the URL on to node
     ProxyPassMatch http://localhost:3000/$1
   </LocationMatch>
