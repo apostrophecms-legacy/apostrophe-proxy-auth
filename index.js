@@ -24,6 +24,9 @@ proxyAuthModule.ProxyAuthModule = function(options, callback) {
     if (!header) {
       return res.send('MISCONFIGURED: Apache configuration is not complete. See the documentation of the apostrophe-proxy-auth module. It is possible to disable this module in dev environments.');
     }
+    if (header === '(null)') {
+      return res.send('MISCONFIGURED, #2: Apache is passing the string "(null)" as the username. Check your proxy server configuration and make sure that cosign is configured to provide REMOTE_USER.');
+    }
     var user;
     return self.unserialize(req, function(err, user) {
       if (err) {
@@ -31,9 +34,13 @@ proxyAuthModule.ProxyAuthModule = function(options, callback) {
         req.session.destroy();
         return res.send(self.renderPage(req, 'insufficient', {}, 'anon'));
       }
-      req.user = user;
-      return self._apos.authRedirectAfterLogin(req, function(url) {
-        return res.redirect(url);
+      return req.login(user, function(err) {
+        if (err) {
+          return res.send('Unexpected login error occurred in passport');
+        }
+        return self._apos.authRedirectAfterLogin(req, function(url) {
+          return res.redirect(url);
+        });
       });
     });
   });
@@ -112,7 +119,7 @@ proxyAuthModule.ProxyAuthModule = function(options, callback) {
                 login: true
               }
             );
-            return self.beforeCreatePerson(req, cas, user, callback);
+            return self.beforeCreatePerson(req, user, callback);
           },
           save: function(callback) {
             // Save the new person to the database after the
@@ -120,7 +127,7 @@ proxyAuthModule.ProxyAuthModule = function(options, callback) {
             people.putOne(req, user, callback);
           },
           after: function(callback) {
-            return self.afterCreatePerson(req, cas, user, callback);
+            return self.afterCreatePerson(req, user, callback);
           }
         }, outerCallback);
       },
@@ -141,16 +148,16 @@ proxyAuthModule.ProxyAuthModule = function(options, callback) {
     });
   };
 
-  self.beforeCreatePerson = function(req, cas, person, callback) {
+  self.beforeCreatePerson = function(req, person, callback) {
     if (options.createPerson.before) {
-      return options.createPerson.before(req, cas, user, callback);
+      return options.createPerson.before(req, user, callback);
     }
     return callback(null);
   };
 
-  self.afterCreatePerson = function(req, cas, person, callback) {
+  self.afterCreatePerson = function(req, person, callback) {
     if (options.createPerson.after) {
-      return options.createPerson.after(req, cas, user, callback);
+      return options.createPerson.after(req, user, callback);
     }
     return callback(null);
   };
