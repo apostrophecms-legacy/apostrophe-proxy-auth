@@ -28,35 +28,43 @@ proxyAuthModule.ProxyAuthModule = function(options, callback) {
       return res.send('MISCONFIGURED, #2: Apache is passing the string "(null)" as the username. Check your proxy server configuration and make sure that cosign is configured to provide REMOTE_USER.');
     }
     var user;
-    return self.unserialize(req, function(err, user) {
+    return self.unserialize(req, header, function(err, user) {
       if (err) {
         console.error(err);
         req.session.destroy();
         return res.send(self.renderPage(req, 'insufficient', {}, 'anon'));
       }
-      return req.login(user, function(err) {
-        if (err) {
-          return res.send('Unexpected login error occurred in passport');
-        }
-        return self._apos.authRedirectAfterLogin(req, function(url) {
-          return res.redirect(url);
-        });
+      req.user = user;
+      req.session.proxyAuthUsername = header;
+      return self._apos.authRedirectAfterLogin(req, function(url) {
+        return res.redirect(url);
       });
     });
   });
+
+  self.middleware.push(
+    function(req, res, next) {
+      if (!req.session.proxyAuthUsername) {
+        return next();
+      }
+      return self.unserialize(req, req.session.proxyAuthUsername, function(err, user) {
+        if (err) {
+          req.session.destroy();
+        } else {
+          req.user = user;
+        }
+        return next();
+      });
+    }
+  );
 
   // Access to other modules
   self.setBridge = function(bridge) {
     self._bridge = bridge;
   };
 
-  self.unserialize = function(req, callback) {
+  self.unserialize = function(req, username, callback) {
     var user;
-    var username;
-    username = req.headers['x-remote-user'];
-    if (!username) {
-      return callback(null);
-    }
     return async.series({
       fetchUser: function(outerCallback) {
         var users = self._apos.authHardcodedUsers(options.site.options);
