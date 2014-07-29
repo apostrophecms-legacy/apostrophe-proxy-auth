@@ -176,15 +176,11 @@ Next, create `/etc/sites-enabled/mysite` and configure it to protect the `/login
 
   CosignCrypto /etc/apache2/cosign/mysite-0.key /etc/apache2/cosign/mysite-0.crt /etc/ssl/certs
 
-  # Reverse proxy, only for URLs that are NOT part of cosign authentication,
-  # which must be handled as configured in weblogin.conf and the /login block below
+  # Reverse proxy, only for URLs that are NOT part of cosign
+  # authentication, which must be handled as configured in
+  # weblogin.conf and the /login block below
   <LocationMatch "^/(?!cosign)(.*)$">
-    # Copy the REMOTE_USER environment variable to a custom
-    # HTTP header and pass that on to the node server
-    RewriteCond %{REMOTE_USER} (.*)
-    RewriteRule .* - [E=PROXY_USER:%1]
-    RequestHeader set x-remote-user %{PROXY_USER}s
-    # Pass the URL on to node
+    RequestHeader set x-remote-user %{REMOTE_USER}s
     ProxyPassMatch http://localhost:3000/$1
   </LocationMatch>
 

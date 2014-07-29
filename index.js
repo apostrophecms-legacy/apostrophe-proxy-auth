@@ -177,10 +177,12 @@ proxyAuthModule.ProxyAuthModule = function(options, callback) {
       return res.redirect('/');
     }
     req.session.destroy();
+    req.session = null;
     // Send the user to the official campus-wide logout URL
     if (options.afterLogout) {
       return res.redirect(options.afterLogout);
     }
+    return res.redirect('/');
   });
 
   if (callback) {
