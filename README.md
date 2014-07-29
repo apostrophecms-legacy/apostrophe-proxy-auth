@@ -283,20 +283,18 @@ Logging out works out of the box. If you also want the user logged out of a larg
     }
 ```
 
-## Disabling the Module for Development
+## Enabling the Module in Production Only
 
-You may wish to disable this module, particularly in a dev environment, so that the regular login mechanism can be used. It's often simplest to do this in `data/local.js`, which is merged with your app configuration from `app.js`. To make this easier, we provide a `disabled` option.
-
-Here's an example `data/local.js` file in which we turn the regular `auth` mechanism back on and disable the `apostrophe-proxy-auth` module:
+You may not wish to use this module in development environments where you don't have an authenticating reverse proxy. In such cases, just do your configuration on the production server in `/opt/stagecoach/apps/mysite/data/local.js` instead of `app.js`, like this:
 
 ```javascript
 module.exports = {
-  auth: true,
+  auth: false,
   modules: {
-    'apostrophe-proxy-auth': {
-      disabled: true
-    }
+    'apostrophe-proxy-auth': { }
   }
-}
+};
 ```
+
+You will likely have other directives here as well, like `minify: true`. Options here are merged with the options in `app.js`.
 
