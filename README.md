@@ -101,7 +101,7 @@ Create the `/etc/apache2/cosign` folder:
 mkdir /etc/apache2/cosign
 ```
 
-**Populate this folder with the certificate and key files provided by your customer.** They may provide separate certificate and key files for use by cosign and for the site itself. Or they may be the same.
+**Populate this folder with the certificate and key files provided by your customer.** For PRE-PRODUCTION, you may use the certificate and key files for the SSL protection of the website, as well as for cosign. (Users will see browser warnings.) For PRODUCTION, you will need SEPARATE certificates and keys for cosign and for the actual website.
 
 **They may also provide a root CA (certificate authority) file** which should be copied to `/etc/ssl/certs`, under a name that does not conflict with other files there. After that, ask the system to rehash the root certificates:
 
